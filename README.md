@@ -53,6 +53,12 @@ access, flip one variable and the volume/CPC/forecast tools appear.
 | `run_gaql_query` | Explorer | Read-only GAQL queries |
 | `search_terms_report` | Explorer | Real search terms from your campaigns |
 | `api_status` | Explorer | Diagnostics, quota used, token health |
+| `meta_status` | Meta token | Meta token validity, expiry, scopes and visible ad accounts |
+| `meta_search_locations` | Meta token | Meta region / city keys |
+| `meta_search_interests` | Meta token | Meta interests with audience size |
+| `meta_audience_size` | Meta token | Monthly audience for one targeting |
+| `meta_audience_matrix` | Meta token | Geos × interest sets audience grid, with CSV |
+| `meta_campaign_insights` | Meta token | Spend, reach, leads and cost per result |
 | `keyword_ideas` | **Basic** | Ideas with volume, competition, bids |
 | `keyword_metrics` | **Basic** | 12-month search volume |
 | `keyword_forecast` | **Basic** | Impressions, clicks, cost |

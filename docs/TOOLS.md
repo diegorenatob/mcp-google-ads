@@ -148,3 +148,24 @@ Google errors are translated into actionable messages, never leaking tokens or h
 | `USER_PERMISSION_DENIED` | `GOOGLE_ADS_LOGIN_CUSTOMER_ID` missing or wrong |
 | `invalid_grant` (OAuth) | Google refresh token expired: run `npm run google:auth` |
 | Daily budget exhausted | Rejected locally before calling Google |
+
+## Meta (optional) — enabled when `META_ACCESS_TOKEN` is set
+
+Read-only Meta Marketing API tools. The client only issues `GET` requests to an allowlist
+of paths (`search`, `me`, `me/adaccounts`, `debug_token`, `act_<id>/delivery_estimate`,
+`act_<id>/insights`); anything else is refused before a request is made. Tokens are
+scrubbed from errors and paging URLs are dropped. Meta no longer returns cost or result
+curves (`daily_outcomes_curve`) through the API, so these tools estimate audience size only.
+
+| Tool | Parameters | Returns |
+|---|---|---|
+| `meta_status` | — | Token validity, expiry, scopes, visible ad accounts, interest presets |
+| `meta_search_locations` | `query`, `location_types` (region, city…), `country_code`, `limit` | Location keys |
+| `meta_search_interests` | `query`, `locale` (pt_BR), `limit` | Interest IDs with global audience bounds |
+| `meta_audience_size` | `geo` {countries, regions, cities}, `excluded_regions`, `age_min`, `age_max`, `interest_ids` or `interest_preset`, `optimization_goal`, `ad_account_id` | Monthly active audience bounds |
+| `meta_audience_matrix` | `geos` [{label, geo, excluded_regions}], `interest_sets` [{label, interest_ids}] (default: presets), `include_no_interest`, ages, goal, account | One row per cell (max 60) + CSV |
+| `meta_campaign_insights` | `date_preset` (last_30d), `level` (campaign), `ad_account_id`, `limit` | Spend, impressions, reach, clicks, CTR, CPM, actions, cost per action |
+
+`ad_account_id` must be an account the token can see. Interest IDs in a targeting are ORed.
+Interest presets (`job_seekers`, `self_employed`) are verified proxies: Meta has no
+interests for labour law or unemployment insurance.

@@ -3,12 +3,15 @@ import type { GoogleAdsClient } from '../ads/client.js';
 import type { OpsBudget } from '../ads/budget.js';
 import { AdsError } from '../ads/errors.js';
 import type { Config } from '../config.js';
+import type { MetaClient } from '../meta/client.js';
 import type { TtlCache } from '../util/cache.js';
 import type { Logger } from '../util/logger.js';
 
 export interface ToolContext {
   config: Config;
   ads: GoogleAdsClient;
+  /** Present when META_ACCESS_TOKEN is set. */
+  meta?: MetaClient;
   budget: OpsBudget;
   cache: TtlCache<unknown>;
   logger: Logger;

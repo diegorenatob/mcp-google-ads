@@ -47,6 +47,16 @@ const schema = z.object({
     .transform((s) => s.toUpperCase())
     .default('BR'),
   CACHE_TTL_HOURS: z.coerce.number().min(0).default(24),
+
+  /** Meta Marketing API (optional). Empty token = Meta tools are not registered. */
+  META_ACCESS_TOKEN: z.string().default(''),
+  /** Default ad account for Meta estimates and reports (digits, act_ prefix optional). */
+  META_AD_ACCOUNT_ID: z
+    .string()
+    .default('')
+    .transform((s) => s.trim().replace(/^act[_-]?/i, ''))
+    .pipe(z.string().regex(/^(\d{1,20})?$/, 'must be empty or the numeric ad account ID')),
+  META_API_VERSION: z.string().regex(/^v\d+\.\d+$/).default('v23.0'),
 });
 
 export type Config = z.infer<typeof schema>;
