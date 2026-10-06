@@ -31,6 +31,7 @@ Test date: **2026-10-06**. API version: **v23**.
 | `KeywordPlanIdeaService.GenerateAdGroupThemes` | ❌ blocked | Keyword grouping |
 | `KeywordThemeConstantService.SuggestKeywordThemeConstants` | ✅ | Keyword suggestions **without volume** |
 | `GeoTargetConstantService.SuggestGeoTargetConstants` | ✅ | Location lookup |
+| `KeywordThemeConstantService` with a place name in the query ("advogado trabalhista porto alegre") | ⚠️ 0 results | Themes ignore local queries; only `countryCode` filters |
 | `GoogleAdsService.Search` (GAQL) | ✅ | Reports, account structure |
 | `CustomerService.ListAccessibleCustomers` | ✅ | List accounts |
 | `KeywordPlanService` (saved plans) | ⚠️ not tested | Needs creating a plan (a write) |

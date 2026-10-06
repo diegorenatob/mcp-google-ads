@@ -1,9 +1,14 @@
 import * as z from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { autocomplete } from '../../sources/autocomplete.js';
+import { autocomplete, autocompleteLocal, normalizeText } from '../../sources/autocomplete.js';
 import { READ_ONLY, ok, run, type ToolContext } from '../context.js';
 
 const lang = (ctx: ToolContext) => z.string().min(2).max(5).optional().describe(`ISO-639-1 language code (default ${ctx.config.DEFAULT_LANGUAGE_CODE})`);
+const locationsArg = z
+  .array(z.string().min(1).max(60))
+  .max(8)
+  .optional()
+  .describe('Place names (city, state, region) to bias results toward, e.g. ["Porto Alegre", "Rio Grande do Sul"]. Adds local keyword variants; Google Ads keyword themes can only filter by country.');
 const country = (ctx: ToolContext) => z.string().length(2).optional().describe(`ISO-3166 country code (default ${ctx.config.DEFAULT_COUNTRY_CODE})`);
 
 async function adsKeywordThemes(ctx: ToolContext, query: string, language: string, countryCode: string): Promise<string[]> {
@@ -52,10 +57,11 @@ export function registerResearchTools(server: McpServer, ctx: ToolContext): void
     {
       title: 'Google Autocomplete keywords',
       description:
-        'Real searches people type, from Google Autocomplete. Modes: plain, alphabet (query + a..z), questions (how/what/... + query), all. No search volume. Unofficial source.',
+        'Real searches people type, from Google Autocomplete. Modes: plain, alphabet (query + a..z), questions (how/what/... + query), all. Pass `locations` to add local variants ("<query> <place>", "<query> em <place>"). No search volume. Unofficial source.',
       inputSchema: {
         query: z.string().min(1).max(80),
         mode: z.enum(['plain', 'alphabet', 'questions', 'all']).optional().describe('Default plain'),
+        locations: locationsArg,
         language_code: lang(ctx),
         country_code: country(ctx),
       },
@@ -66,10 +72,12 @@ export function registerResearchTools(server: McpServer, ctx: ToolContext): void
         const language = args.language_code ?? d.language;
         const countryCode = args.country_code ?? d.country;
         const mode = args.mode ?? 'plain';
-        const { suggestions, sources } = await autocomplete(args.query, mode, language, countryCode);
-        return ok(`${suggestions.length} autocomplete suggestions for "${args.query}" (mode ${mode}).`, {
+        const locations = args.locations ?? [];
+        const { suggestions, sources } = await autocomplete(args.query, mode, language, countryCode, locations);
+        return ok(`${suggestions.length} autocomplete suggestions for "${args.query}" (mode ${mode}${locations.length ? `, ${locations.length} location(s)` : ''}).`, {
           query: args.query,
           mode,
+          locations,
           suggestions,
           sources,
         });
@@ -81,12 +89,13 @@ export function registerResearchTools(server: McpServer, ctx: ToolContext): void
     {
       title: 'Keyword research (merged sources)',
       description:
-        'One-call keyword research: Google Ads keyword themes + Google Autocomplete (+ question variants), de-duplicated and ranked by how many sources agree. Works with Explorer access. No search volume.',
+        'One-call keyword research: Google Ads keyword themes + Google Autocomplete (+ question variants), de-duplicated and ranked by how many sources agree. Pass `locations` for local intent (e.g. a city or state): adds place-biased Autocomplete variants and reports which keywords mention each place. Works with Explorer access. No search volume.',
       inputSchema: {
         seeds: z.array(z.string().min(1).max(80)).min(1).max(10).describe('Seed keywords'),
         country_code: country(ctx),
         language_code: lang(ctx),
         include_questions: z.boolean().optional().describe('Add question-style variants (default true)'),
+        locations: locationsArg,
       },
       annotations: READ_ONLY,
     },
@@ -102,6 +111,7 @@ export function registerResearchTools(server: McpServer, ctx: ToolContext): void
           found.get(k)!.add(source);
         };
         const warnings: string[] = [];
+        const locations = args.locations ?? [];
         for (const seed of args.seeds) {
           try {
             (await adsKeywordThemes(ctx, seed, language, countryCode)).forEach((k) => add(k, 'ads_themes'));
@@ -112,15 +122,25 @@ export function registerResearchTools(server: McpServer, ctx: ToolContext): void
           if (args.include_questions ?? true) {
             (await autocomplete(seed, 'questions', language, countryCode)).suggestions.forEach((k) => add(k, 'questions'));
           }
+          if (locations.length) {
+            (await autocompleteLocal(seed, locations, language, countryCode)).suggestions.forEach((k) => add(k, 'autocomplete_local'));
+          }
         }
+        const places = locations.map((p) => ({ name: p, key: normalizeText(p) }));
         const keywords = [...found.entries()]
-          .map(([keyword, s]) => ({ keyword, sources: [...s].sort(), source_count: s.size }))
+          .map(([keyword, s]) => ({
+            keyword,
+            sources: [...s].sort(),
+            source_count: s.size,
+            ...(places.length ? { matched_locations: places.filter((p) => normalizeText(keyword).includes(p.key)).map((p) => p.name) } : {}),
+          }))
           .sort((a, b) => b.source_count - a.source_count || a.keyword.localeCompare(b.keyword))
           .slice(0, 300);
-        return ok(`${keywords.length} unique keywords from ${args.seeds.length} seed(s). Higher source_count = stronger signal.`, {
+        return ok(`${keywords.length} unique keywords from ${args.seeds.length} seed(s)${locations.length ? ` and ${locations.length} location(s)` : ''}. Higher source_count = stronger signal.`, {
           seeds: args.seeds,
           language,
           country: countryCode,
+          locations,
           keywords,
           ...(warnings.length ? { warnings } : {}),
         });

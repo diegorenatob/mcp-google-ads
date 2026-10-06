@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { mapGoogleAdsError } from '../src/ads/errors.js';
 import { guardGaql } from '../src/ads/gaql.js';
-import { buildVariants } from '../src/sources/autocomplete.js';
+import { buildVariants, localVariants, normalizeText } from '../src/sources/autocomplete.js';
 import { redact } from '../src/util/logger.js';
 import { loadConfig } from '../src/config.js';
 import { testConfig } from './helpers.js';
@@ -52,6 +52,28 @@ describe('autocomplete variants', () => {
   });
 });
 
+describe('local (place) variants', () => {
+  it('builds "<q> <place>" and "<q> em <place>" for Portuguese', () => {
+    expect(localVariants('advogado trabalhista', ['Porto Alegre'], 'pt')).toEqual([
+      'advogado trabalhista Porto Alegre',
+      'advogado trabalhista em Porto Alegre',
+    ]);
+  });
+  it('uses the right preposition per language and skips unknown ones', () => {
+    expect(localVariants('lawyer', ['Austin'], 'en')).toContain('lawyer in Austin');
+    expect(localVariants('abogado', ['Lima'], 'es')).toContain('abogado en Lima');
+    expect(localVariants('x', ['Y'], 'ja')).toEqual(['x Y']);
+  });
+  it('is added on top of the selected mode and de-duplicated', () => {
+    const v = buildVariants('x', 'plain', 'pt', ['Rio', 'Rio', ' ']);
+    expect(v).toEqual(['x', 'x Rio', 'x em Rio']);
+  });
+  it('matches place names ignoring accents and case', () => {
+    expect(normalizeText('Capão da Canoa')).toBe('capao da canoa');
+    expect(normalizeText('advogado em CAPAO DA CANOA').includes(normalizeText('Capão da Canoa'))).toBe(true);
+  });
+});
+
 describe('logger redaction', () => {
   it('hides sensitive keys at any depth', () => {
     expect(redact({ a: 1, refresh_token: 'r', nested: { Authorization: 'b', ok: 2 } })).toEqual({
@@ -59,6 +81,17 @@ describe('logger redaction', () => {
       refresh_token: '[redacted]',
       nested: { Authorization: '[redacted]', ok: 2 },
     });
+  });
+});
+
+describe('account allowlist', () => {
+  it('parses a comma-separated list, with or without dashes', () => {
+    const c = testConfig({ GOOGLE_ADS_ALLOWED_CUSTOMER_IDS: '123-456-7890, 1111111111' });
+    expect(c.GOOGLE_ADS_ALLOWED_CUSTOMER_IDS).toEqual(['1234567890', '1111111111']);
+  });
+  it('defaults to empty (discovery) and rejects malformed IDs', () => {
+    expect(testConfig().GOOGLE_ADS_ALLOWED_CUSTOMER_IDS).toEqual([]);
+    expect(() => testConfig({ GOOGLE_ADS_ALLOWED_CUSTOMER_IDS: '12345' })).toThrow(/GOOGLE_ADS_ALLOWED_CUSTOMER_IDS/);
   });
 });
 

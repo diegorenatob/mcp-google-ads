@@ -87,6 +87,14 @@ Each phase ends with its acceptance criteria green before the next one starts.
 - Set `GOOGLE_ADS_ACCESS_LEVEL=basic`, recreate, verify `keyword_ideas`, `keyword_metrics`,
   `keyword_forecast` with real volumes.
 
+## Changes after the first release
+
+- **Place-biased keyword research** (`locations` on `autocomplete_keywords` / `research_keywords`):
+  covers local intent on Explorer, where Google Ads keyword themes only filter by country (and
+  return nothing for queries containing a place name, so local variants come from Autocomplete only).
+- **Account allowlist** (`GOOGLE_ADS_ALLOWED_CUSTOMER_IDS`): the server only queries the accounts
+  listed in `.env`. Unit tests: 25/25.
+
 ## Verified results (2026-10-06, Explorer access)
 
 | Tool | Live result |

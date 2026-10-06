@@ -25,6 +25,7 @@ access, flip one variable and the volume/CPC/forecast tools appear.
 | Works on Explorer access | ❌ | ✅ |
 | Keyword suggestions | Basic only | ✅ Explorer (Ads keyword themes + Autocomplete) |
 | Question-style keywords | — | ✅ |
+| Local intent (city / state) without a geo filter | — | ✅ place-biased variants |
 | Location lookup | — | ✅ |
 | Read-only GAQL reports / search terms | — | ✅ |
 | Search volume, CPC, forecast | Basic | ✅ with Basic (`GOOGLE_ADS_ACCESS_LEVEL=basic`) |
@@ -45,8 +46,8 @@ access, flip one variable and the volume/CPC/forecast tools appear.
 | Tool | Access level | What it does |
 |---|---|---|
 | `suggest_keywords` | Explorer | Keyword suggestions from Google Ads |
-| `autocomplete_keywords` | none | Real searches from Google Autocomplete (A–Z, questions) |
-| `research_keywords` | Explorer | Both sources merged, ranked by agreement |
+| `autocomplete_keywords` | none | Real searches from Google Autocomplete (A–Z, questions, places) |
+| `research_keywords` | Explorer | Both sources merged, ranked by agreement; optional `locations` for local intent |
 | `search_locations` | Explorer | Location IDs for targeting |
 | `list_accounts` | Explorer | Accounts under your manager account |
 | `run_gaql_query` | Explorer | Read-only GAQL queries |

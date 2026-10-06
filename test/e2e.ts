@@ -103,6 +103,7 @@ const toolArgs: Record<string, unknown> = arg('args')
 const call = await parse(await rpc(tokens.access_token!, { jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: tool, arguments: toolArgs } }));
 const content = (call.result?.content as Array<{ text: string }> | undefined)?.[0]?.text ?? JSON.stringify(call.error);
 check(!!call.result && !call.result.isError, `tools/call ${tool}`, content.split('\n')[0]);
+if (process.argv.includes('--show')) console.log(content);
 
 // 8. Refresh
 const refresh = await fetch(asMeta.token_endpoint!, {

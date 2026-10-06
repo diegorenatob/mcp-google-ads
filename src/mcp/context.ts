@@ -56,8 +56,10 @@ export async function run(
 const microsToUnits = (m: unknown) => (m === undefined || m === null ? null : Math.round(Number(m) / 10_000) / 100);
 export { microsToUnits };
 
-/** Account IDs this server may query: accessible accounts + everything under the MCC. Cached 1 h. */
+/** Account IDs this server may query: the configured allowlist, or else accessible accounts + everything under the MCC. */
 export async function allowedCustomerIds(ctx: ToolContext): Promise<Set<string>> {
+  const configured = ctx.config.GOOGLE_ADS_ALLOWED_CUSTOMER_IDS;
+  if (configured.length > 0) return new Set([...configured, ctx.ads.customerId]);
   const cached = ctx.cache.get('__allowed_ids') as string[] | undefined;
   if (cached) return new Set(cached);
   const ids = new Set(await ctx.ads.listAccessibleCustomers());

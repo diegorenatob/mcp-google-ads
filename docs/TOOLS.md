@@ -33,6 +33,7 @@ Real searches suggested by Google Autocomplete (unofficial source).
 |---|---|---|---|
 | `query` | string | yes | — |
 | `mode` | `plain` \| `alphabet` \| `questions` \| `all` | no | `plain` |
+| `locations` | string[] (max 8) | no | — |
 | `language_code` | string | no | `pt` |
 | `country_code` | string | no | `BR` |
 
@@ -40,6 +41,9 @@ Real searches suggested by Google Autocomplete (unofficial source).
 - `questions`: prepends per-language modifiers (pt: como, quanto, quando, qual, onde,
   porque, o que, quem, pode, tem direito; en: how, what, when, why, where, can, is).
 - `all`: plain + alphabet + questions.
+- `locations`: adds place-biased variants on top of the mode: `<query> <place>` and
+  `<query> em <place>` (`en` / `in` for es / en). Google Ads keyword themes can only filter by
+  country, so this is how local intent (a city or state) is covered on Explorer access.
 - Max concurrency 4, pause between batches, de-duplicated and sorted.
 
 Output: `{ query, mode, suggestions: [string], sources: { [variant]: [string] } }`.
@@ -52,9 +56,15 @@ Combines 1 and 2 in a single call for the most common use case.
 | `seeds` | string[] (1-10) | yes | — |
 | `country_code`, `language_code` | string | no | BR / pt |
 | `include_questions` | bool | no | true |
+| `locations` | string[] (max 8) | no | — |
 
 Output: unified list `{ keyword, sources: ["ads_themes"|"autocomplete"|"questions"] }`,
 de-duplicated, with a source count per keyword (more sources = stronger signal).
+
+With `locations`, an extra source appears (`autocomplete_local`) and each keyword carries
+`matched_locations` (the places its text mentions, accent-insensitive). Google Ads keyword themes
+return **nothing** when the query contains a place name (tested), so local variants come only from
+Autocomplete and cost no Google Ads operations.
 
 ### 4. `search_locations`
 Looks up location IDs for targeting (`GeoTargetConstantService.Suggest`).
@@ -69,7 +79,8 @@ Output: `[{ id, name, canonical_name, target_type, country_code, status }]`.
 ### 5. `list_accounts`
 Accessible accounts and hierarchy under the configured MCC (`customer_client`).
 
-No parameters. Output: `[{ id, name, manager, status, level, currency, time_zone }]`.
+No parameters. Output: `[{ id, name, manager, status, level, currency, time_zone }]`. If
+`GOOGLE_ADS_ALLOWED_CUSTOMER_IDS` is set, only those accounts (plus the manager) are listed.
 
 ### 6. `run_gaql_query`
 Runs a **read-only GAQL** query (`GoogleAdsService.Search`).
@@ -81,7 +92,8 @@ Runs a **read-only GAQL** query (`GoogleAdsService.Search`).
 | `max_rows` | int 1-1000 | no | 200 |
 
 Rules: only `SELECT ... FROM ...` is accepted; anything else is rejected. A `LIMIT` is
-added if missing. `customer_id` must be in the list of accessible accounts.
+added if missing. `customer_id` must be in `GOOGLE_ADS_ALLOWED_CUSTOMER_IDS` when set, otherwise in the
+list of accessible accounts.
 
 ### 7. `search_terms_report`
 Real search terms from your campaigns (`search_term_view`).

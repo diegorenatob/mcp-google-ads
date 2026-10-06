@@ -23,7 +23,12 @@ export function registerAccountTools(server: McpServer, ctx: ToolContext): void 
           'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.status, customer_client.level, customer_client.currency_code, customer_client.time_zone, customer_client.test_account FROM customer_client',
           1000,
         );
-        const accounts = rows.map((r) => {
+        const allow = ctx.config.GOOGLE_ADS_ALLOWED_CUSTOMER_IDS;
+        const visible = allow.length ? rows.filter((r) => {
+          const id = String((r.customerClient as { id?: string } | undefined)?.id ?? '');
+          return id === root || allow.includes(id) || id === ctx.ads.customerId;
+        }) : rows;
+        const accounts = visible.map((r) => {
           const c = (r.customerClient ?? {}) as Record<string, unknown>;
           return {
             id: c.id,
@@ -37,7 +42,10 @@ export function registerAccountTools(server: McpServer, ctx: ToolContext): void 
             is_default: c.id === ctx.ads.customerId,
           };
         });
-        return ok(`${accounts.length} accounts under ${root}.`, { manager_account: root, accounts });
+        return ok(`${accounts.length} accounts under ${root}${allow.length ? ' (restricted to the configured allowlist)' : ''}.`, {
+          manager_account: root,
+          accounts,
+        });
       }),
   );
 
@@ -142,6 +150,9 @@ export function registerAccountTools(server: McpServer, ctx: ToolContext): void 
             google_auth: googleAuth,
             accessible_accounts: accessible,
             default_account: `******${ctx.ads.customerId.slice(-4)}`,
+            account_allowlist: ctx.config.GOOGLE_ADS_ALLOWED_CUSTOMER_IDS.length
+              ? ctx.config.GOOGLE_ADS_ALLOWED_CUSTOMER_IDS.map((id) => `******${id.slice(-4)}`)
+              : 'discovery',
             api_version: ctx.config.GOOGLE_ADS_API_VERSION,
             ops_budget: ctx.budget.usage(),
             defaults: { language: ctx.config.DEFAULT_LANGUAGE_CODE, country: ctx.config.DEFAULT_COUNTRY_CODE },

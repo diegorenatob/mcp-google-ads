@@ -88,6 +88,8 @@ Implemented with the official SDK pieces from `@modelcontextprotocol/sdk/server/
 - **Ops budget**: a per-day counter in `data/` rejects calls locally once
   `GOOGLE_ADS_DAILY_OPS_BUDGET` is reached (Explorer allows 2,880 production ops/day).
 - **Cache**: in-memory `(tool, args)` → result, TTL `CACHE_TTL_HOURS`; suggestions change slowly. GAQL and status calls are never cached.
+- **Account allowlist**: `GOOGLE_ADS_ALLOWED_CUSTOMER_IDS` pins which accounts tools may query
+  (empty = discover from the manager account). Pinning avoids relying on dynamic discovery.
 - **Feature gating**: Keyword Planner tools are registered only when
   `GOOGLE_ADS_ACCESS_LEVEL=basic`.
 

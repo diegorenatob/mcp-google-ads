@@ -30,6 +30,12 @@ const schema = z.object({
     .default('')
     .transform((s) => s.replace(/-/g, '').trim())
     .pipe(z.string().regex(/^(\d{10})?$/, 'must be empty or a 10-digit ID')),
+  /** Accounts this server may query. Empty = discover them from the manager account. */
+  GOOGLE_ADS_ALLOWED_CUSTOMER_IDS: z
+    .string()
+    .default('')
+    .transform((s) => s.split(',').map((x) => x.replace(/-/g, '').trim()).filter(Boolean))
+    .pipe(z.array(z.string().regex(/^\d{10}$/, 'each ID must be 10 digits'))),
   GOOGLE_ADS_API_VERSION: z.string().regex(/^v\d+$/).default('v23'),
   GOOGLE_ADS_ACCESS_LEVEL: z.enum(['explorer', 'basic']).default('explorer'),
   GOOGLE_ADS_DAILY_OPS_BUDGET: z.coerce.number().int().positive().default(2500),
