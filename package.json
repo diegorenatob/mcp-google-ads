@@ -1,0 +1,47 @@
+{
+  "name": "mcp-google-ads",
+  "version": "0.1.0",
+  "description": "Google Ads MCP server that works with Explorer API access. Remote (Streamable HTTP) with built-in OAuth for Claude.",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env --import tsx src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/src/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:e2e": "node --env-file-if-exists=.env --import tsx test/e2e.ts",
+    "google:auth": "node --env-file-if-exists=.env --import tsx scripts/google-auth.ts",
+    "google:check": "node --env-file-if-exists=.env --import tsx scripts/google-check.ts",
+    "scan:secrets": "bash scripts/scan-secrets.sh"
+  },
+  "keywords": [
+    "mcp",
+    "google-ads",
+    "keyword-research",
+    "claude",
+    "model-context-protocol"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "express": "^5.2.1",
+    "jose": "^6.2.12",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.3"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22.9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/diegorenatob/mcp-google-ads.git"
+  }
+}

@@ -1,0 +1,30 @@
+services:
+  mcp-google-ads:
+    build: .
+    image: mcp-google-ads:local
+    container_name: mcp-google-ads
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /app/data
+    volumes:
+      - ./data:/app/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-proxy}
+      - traefik.http.routers.mcp-google-ads.rule=Host(`${MCP_DOMAIN}`)
+      - traefik.http.routers.mcp-google-ads.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}
+      - traefik.http.routers.mcp-google-ads.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
+      - traefik.http.services.mcp-google-ads.loadbalancer.server.port=${PORT:-8080}
+
+networks:
+  proxy:
+    external: true
+    name: ${TRAEFIK_NETWORK:-proxy}

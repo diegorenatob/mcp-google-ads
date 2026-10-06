@@ -1,0 +1,30 @@
+# --- Secrets: NEVER committed (public repo) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+client_secret*.json
+credentials*.json
+token*.json
+
+# --- Runtime state (registered OAuth clients, tokens, cache) ---
+data/
+
+# --- Local deployment overrides (real domains/labels) ---
+docker-compose.override.yml
+
+# --- Node / build ---
+node_modules/
+dist/
+coverage/
+*.log
+npm-debug.log*
+
+# --- Editor / OS ---
+.DS_Store
+.vscode/
+.idea/
+
+# --- Server-specific runbooks (IPs, zone IDs, real domains) ---
+*.local.md
