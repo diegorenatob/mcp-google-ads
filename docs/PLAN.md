@@ -1,6 +1,6 @@
 # Implementation plan
 
-Status (2026-10-06): **phases 0–6 done** — v0.1.0 deployed and verified end-to-end. Phase 7 in progress, phase 8 waits for Google.
+Status (2026-10-06): **phases 0–7 done** — v0.1.0 deployed and verified end-to-end. Phase 8 waits for Google (Basic access).
 Goal: a public, dockerized, read-only Google Ads MCP server that is **useful on Explorer
 access**, deployed on a subdomain, installable from Claude web with a simple login.
 
@@ -77,9 +77,9 @@ Each phase ends with its acceptance criteria green before the next one starts.
 - **Accept**: Claude web connector logs in with the access key and a tool returns data.
 - Result: public e2e (DCR → authorize → key login → token → initialize → tools/list → research_keywords → refresh) passes 13/13.
 
-### Phase 7 — Wrap-up (in progress)
+### Phase 7 — Wrap-up ✅
 - Update `/opt/INFRA.md` (new service, no secret values).
-- Retire `kwp-mcp` if D4 approved.
+- Retire the previous Keyword Planner MCP (container, image and DNS removed).
 - Final README pass.
 
 ### Phase 8 — Basic access (when Google approves; ~30 min)
